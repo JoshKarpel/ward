@@ -98,7 +98,6 @@ def rewrite_assertion(test: Test) -> Test:
     indents = textwrap._leading_whitespace_re.findall(code)
     col_offset = len(indents[0]) if len(indents) > 0 else 0
     code = textwrap.dedent(code)
-    code_obj = test.fn.__code__
 
     # Rewrite the AST of the code
     tree = ast.parse(code)
@@ -111,26 +110,5 @@ def rewrite_assertion(test: Test) -> Test:
     for child in ast.walk(new_tree):
         if hasattr(child, "col_offset"):
             child.col_offset = getattr(child, "col_offset", 0) + col_offset
-
-    # Reconstruct the test function
-    new_mod_code_obj = compile(new_tree, code_obj.co_filename, "exec")
-
-    # TODO: This probably isn't correct for nested closures
-    clo_glob = {}
-    if test.fn.__closure__:
-        clo_glob = test.fn.__closure__[0].cell_contents.__globals__
-
-    for const in new_mod_code_obj.co_consts:
-        if isinstance(const, types.CodeType):
-            new_test_func = types.FunctionType(
-                const,
-                {**assert_func_namespace, **test.fn.__globals__, **clo_glob},
-                test.fn.__name__,
-                test.fn.__defaults__,
-            )
-            new_test_func.ward_meta = test.fn.ward_meta
-            return Test(
-                **{k: vars(test)[k] for k in vars(test) if k != "fn"}, fn=new_test_func,
-            )
 
     return test

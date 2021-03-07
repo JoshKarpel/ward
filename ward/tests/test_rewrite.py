@@ -187,3 +187,21 @@ if True:
         @test("test with indentation level of 2")
         def _():
             assert 2 + 3 == 5
+
+
+@test("lambda in each preserves test function correctly")
+def _():
+    lam = lambda : None
+
+    @testable_test
+    def test(x=each(lam)):
+        pass
+
+    t = Test(fn=test, module_name="m", id="id-fail",)
+
+    rewritten = rewrite_assertions_in_tests([t])[0]
+
+    assert rewritten.fn is test
+
+    # https://github.com/darrenburns/ward/issues/169 was caused by the below assertion failing
+    assert rewritten.fn is not lam
