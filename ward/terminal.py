@@ -59,25 +59,27 @@ def make_indent(depth=1):
 
 DOUBLE_INDENT = make_indent(depth=2)
 
-theme = Theme({
-    "title": "bold",
-    "heading": "bold",
-    "pass": "#ffffff on #137C39",
-    "pass.textonly": "#189F4A",
-    "fail": "#ffffff on #BF2D2D",
-    "fail.textonly": "#BF2D2D",
-    "fail.header": "bold #BF2D2D",
-    "skip": "#ffffff on #0E67B3",
-    "skip.textonly": "#0E67B3",
-    "xpass": "#162740 on #F4C041",
-    "xpass.textonly": "#F4C041",
-    "xfail": "#ffffff on #695CC8",
-    "xfail.textonly": "#695CC8",
-    "muted": "dim",
-    "info": "yellow italic",
-    "dryrun": "#ffffff on #162740",
-    "rule.line": "#189F4A",
-})
+theme = Theme(
+    {
+        "title": "bold",
+        "heading": "bold",
+        "pass": "#ffffff on #137C39",
+        "pass.textonly": "#189F4A",
+        "fail": "#ffffff on #BF2D2D",
+        "fail.textonly": "#BF2D2D",
+        "fail.header": "bold #BF2D2D",
+        "skip": "#ffffff on #0E67B3",
+        "skip.textonly": "#0E67B3",
+        "xpass": "#162740 on #F4C041",
+        "xpass.textonly": "#F4C041",
+        "xfail": "#ffffff on #695CC8",
+        "xfail.textonly": "#695CC8",
+        "muted": "dim",
+        "info": "yellow italic",
+        "dryrun": "#ffffff on #162740",
+        "rule.line": "#189F4A",
+    }
+)
 console = Console(theme=theme, highlighter=NullHighlighter())
 
 
@@ -154,14 +156,15 @@ def output_test_result_line(test_result: TestResult):
     common_columns = (
         Padding(outcome_tag, style=test_style, pad=(0, 1, 0, 1)),
         Padding(f"{test_location}{test_case_number}", style="muted", pad=(0, 1, 0, 1)),
-        Padding(Markdown(test.description, inline_code_theme="ansi_dark"), pad=(0, 1, 0, 0)),
+        Padding(
+            Markdown(test.description, inline_code_theme="ansi_dark"), pad=(0, 1, 0, 0)
+        ),
     )
 
     if reason:
         grid.add_column(justify="center", style=test_style)
         grid.add_row(
-            *common_columns,
-            Padding(reason, pad=(0, 1, 0, 1)),
+            *common_columns, Padding(reason, pad=(0, 1, 0, 1)),
         )
     else:
         grid.add_row(*common_columns)
@@ -190,7 +193,7 @@ def output_test_per_line(fail_limit, test_results_gen):
 
 
 def output_dots_global(
-        fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
 ) -> List[TestResult]:
     column = 0
     num_failures = 0
@@ -222,7 +225,7 @@ def print_dot(result):
 
 
 def output_dots_module(
-        fail_limit: int, test_results_gen: Generator[TestResult, None, None]
+    fail_limit: int, test_results_gen: Generator[TestResult, None, None]
 ) -> List[TestResult]:
     current_path = Path("")
     rel_path = ""
@@ -239,12 +242,14 @@ def output_dots_module(
                 current_path = result.test.path
                 rel_path = str(current_path.relative_to(os.getcwd()))
                 max_dots_per_line = (
-                        get_terminal_size().width - len(rel_path) - 2
+                    get_terminal_size().width - len(rel_path) - 2
                 )  # subtract 2 for ": "
                 final_slash_idx = rel_path.rfind("/")
                 if final_slash_idx != -1:
-                    console.print(rel_path[: final_slash_idx + 1], style="muted", end="")
-                    console.print(rel_path[final_slash_idx + 1:] + ": ", end="")
+                    console.print(
+                        rel_path[: final_slash_idx + 1], style="muted", end=""
+                    )
+                    console.print(rel_path[final_slash_idx + 1 :] + ": ", end="")
                 else:
                     console.print(f"\n{rel_path}: ", end="")
             print_dot(result)
@@ -265,8 +270,7 @@ def output_dots_module(
 
 def output_run_cancelled():
     console.print(
-        "Run cancelled - results for tests that ran shown below.",
-        style="info",
+        "Run cancelled - results for tests that ran shown below.", style="info",
     )
 
 
@@ -299,21 +303,27 @@ class TestTimingStats:
         grid.add_column()  # Test ID
         grid.add_column()  # Test description
 
-        for result in test_results[:self.num_tests_to_show]:
+        for result in test_results[: self.num_tests_to_show]:
             time_taken_secs = result.test.timer.duration
             time_taken_millis = time_taken_secs * 1000
             test_id = format_test_id(result)
             description = result.test.description
-            grid.add_row(f"[b]{time_taken_millis:.0f}[/b]ms", Text(test_id, style="muted"), description)
+            grid.add_row(
+                f"[b]{time_taken_millis:.0f}[/b]ms",
+                Text(test_id, style="muted"),
+                description,
+            )
 
-        num_slowest_displayed = min(len(self.all_tests_in_session), self.num_tests_to_show)
+        num_slowest_displayed = min(
+            len(self.all_tests_in_session), self.num_tests_to_show
+        )
         panel = Panel(
             RenderGroup(
                 Padding(
                     f"Median: [b]{self.median_secs * 1000:.2f}[/b]ms"
                     f" [muted]|[/muted] "
                     f"99th Percentile: [b]{self.percentile99_secs * 1000:.2f}[/b]ms",
-                    pad=(0, 0, 1, 0)
+                    pad=(0, 0, 1, 0),
                 ),
                 grid,
             ),
@@ -333,11 +343,11 @@ class TestResultWriterBase:
     }
 
     def __init__(
-            self,
-            suite,
-            test_output_style: str,
-            config_path: Optional[Path],
-            show_diff_symbols: bool = False,
+        self,
+        suite,
+        test_output_style: str,
+        config_path: Optional[Path],
+        show_diff_symbols: bool = False,
     ):
         self.suite = suite
         self.test_output_style = test_output_style
@@ -348,9 +358,7 @@ class TestResultWriterBase:
     def output_header(self, time_to_collect):
         python_impl = platform.python_implementation()
         python_version = platform.python_version()
-        console.print(
-            Rule(Text(f"Ward {__version__}", style="title")),
-        )
+        console.print(Rule(Text(f"Ward {__version__}", style="title")),)
         if self.config_path:
             try:
                 path = self.config_path.relative_to(Path.cwd())
@@ -364,9 +372,9 @@ class TestResultWriterBase:
         )
 
     def output_all_test_results(
-            self,
-            test_results_gen: Generator[TestResult, None, None],
-            fail_limit: Optional[int] = None,
+        self,
+        test_results_gen: Generator[TestResult, None, None],
+        fail_limit: Optional[int] = None,
     ) -> List[TestResult]:
         if not self.suite.num_tests:
             return []
@@ -401,7 +409,7 @@ class TestResultWriterBase:
         raise NotImplementedError()
 
     def output_test_result_summary(
-            self, test_results: List[TestResult], time_taken: float, duration: int
+        self, test_results: List[TestResult], time_taken: float, duration: int
     ):
         raise NotImplementedError()
 
@@ -446,7 +454,13 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_why_test_failed_header(self, test_result: TestResult):
         test = test_result.test
         console.print(
-            Padding(Rule(title=Text(test.description, style="fail.header"), style="fail.textonly"), pad=(1, 0, 0, 0)),
+            Padding(
+                Rule(
+                    title=Text(test.description, style="fail.header"),
+                    style="fail.textonly",
+                ),
+                pad=(1, 0, 0, 0),
+            ),
         )
 
     def output_why_test_failed(self, test_result: TestResult):
@@ -456,8 +470,15 @@ class SimpleTestResultWrite(TestResultWriterBase):
 
             if err.operator in Comparison:
                 src = "".join(src_lines)
-                src = Syntax(src, "python", start_line=line_num, line_numbers=True, highlight_lines={err.error_line},
-                             background_color="default", theme="ansi_dark")
+                src = Syntax(
+                    src,
+                    "python",
+                    start_line=line_num,
+                    line_numbers=True,
+                    highlight_lines={err.error_line},
+                    background_color="default",
+                    theme="ansi_dark",
+                )
                 src = Padding(src, (1, 0, 1, 4))
                 console.print(src)
 
@@ -492,7 +513,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
             console.print(str(err))
 
     def output_test_result_summary(
-            self, test_results: List[TestResult], time_taken: float, show_slowest: int
+        self, test_results: List[TestResult], time_taken: float, show_slowest: int
     ):
         if show_slowest:
             console.print(TestTimingStats(test_results, show_slowest))
@@ -507,7 +528,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
         result_table.add_row(
             Padding(str(test_count), pad=HORIZONTAL_PAD, style="bold"),
             Padding("Tests Encountered", pad=HORIZONTAL_PAD),
-            style="default"
+            style="default",
         )
         for outcome, count in outcome_counts.items():
             if count > 0:
@@ -515,7 +536,7 @@ class SimpleTestResultWrite(TestResultWriterBase):
                     Padding(str(count), pad=HORIZONTAL_PAD, style="bold"),
                     Padding(outcome.display_name, pad=HORIZONTAL_PAD),
                     Padding(f"({100 * count / test_count:.1f}%)", pad=HORIZONTAL_PAD),
-                    style=outcome_to_style(outcome)
+                    style=outcome_to_style(outcome),
                 )
 
         exit_code = get_exit_code(test_results)
@@ -524,23 +545,26 @@ class SimpleTestResultWrite(TestResultWriterBase):
         else:
             result_style = "fail.textonly"
 
-        result_summary_panel = Panel(result_table, title="[b default]Results[/b default]", style="none", expand=False,
-                                     border_style=result_style)
+        result_summary_panel = Panel(
+            result_table,
+            title="[b default]Results[/b default]",
+            style="none",
+            expand=False,
+            border_style=result_style,
+        )
         console.print(result_summary_panel)
 
         console.print(
-            Rule(f"[b]{exit_code.clean_name}[/b] in [b]{time_taken:.2f}[/b] seconds", style=result_style)
+            Rule(
+                f"[b]{exit_code.clean_name}[/b] in [b]{time_taken:.2f}[/b] seconds",
+                style=result_style,
+            )
         )
 
     def output_captured_stderr(self, test_result: TestResult):
         if test_result.captured_stderr:
             captured_stderr_lines = test_result.captured_stderr.split("\n")
-            console.print(
-                Padding(
-                    Text(f"Captured stderr"),
-                    pad=(0, 0, 1, 2)
-                )
-            )
+            console.print(Padding(Text(f"Captured stderr"), pad=(0, 0, 1, 2)))
             for line in captured_stderr_lines:
                 console.print(Padding(line, pad=(0, 0, 0, 4)))
             console.print()
@@ -548,29 +572,26 @@ class SimpleTestResultWrite(TestResultWriterBase):
     def output_captured_stdout(self, test_result: TestResult):
         if test_result.captured_stdout:
             captured_stdout_lines = test_result.captured_stdout.split("\n")
-            console.print(
-                Padding(
-                    Text(f"Captured stdout"),
-                    pad=(0, 0, 1, 2)
-                )
-            )
+            console.print(Padding(Text(f"Captured stdout"), pad=(0, 0, 1, 2)))
             for line in captured_stdout_lines:
                 console.print(Padding(line, pad=(0, 0, 0, 4)))
             console.print()
 
     def output_test_failed_location(self, test_result: TestResult):
         if isinstance(test_result.error, TestFailure) or isinstance(
-                test_result.error, AssertionError
+            test_result.error, AssertionError
         ):
             console.print(
                 Padding(
-                    Text(f"Failed at {test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}"),
-                    pad=(1, 0, 1, 2)
+                    Text(
+                        f"Failed at {test_result.test.path.relative_to(Path.cwd())}:{test_result.error.error_line}"
+                    ),
+                    pad=(1, 0, 1, 2),
                 )
             )
 
     def _get_outcome_counts(
-            self, test_results: List[TestResult]
+        self, test_results: List[TestResult]
     ) -> Dict[TestOutcome, int]:
         return {
             TestOutcome.PASS: len(
@@ -621,12 +642,12 @@ def scope_to_colour(scope: Scope) -> str:
 
 
 def output_fixtures(
-        fixtures: List[Fixture],
-        tests: List[Test],
-        show_scopes: bool,
-        show_docstrings: bool,
-        show_dependencies: bool,
-        show_dependency_trees: bool,
+    fixtures: List[Fixture],
+    tests: List[Test],
+    show_scopes: bool,
+    show_docstrings: bool,
+    show_dependencies: bool,
+    show_dependency_trees: bool,
 ):
     generated_tests = itertools.chain.from_iterable(
         test.get_parameterised_instances() for test in tests
@@ -650,14 +671,14 @@ def output_fixtures(
 
 
 def output_fixture_information(
-        fixture: Fixture,
-        used_by_tests: Collection[Test],
-        fixtures_to_children: _TYPE_FIXTURE_TO_FIXTURES,
-        fixtures_to_parents: _TYPE_FIXTURE_TO_FIXTURES,
-        show_scopes: bool,
-        show_docstrings: bool,
-        show_dependencies: bool,
-        show_dependency_trees: bool,
+    fixture: Fixture,
+    used_by_tests: Collection[Test],
+    fixtures_to_children: _TYPE_FIXTURE_TO_FIXTURES,
+    fixtures_to_parents: _TYPE_FIXTURE_TO_FIXTURES,
+    show_scopes: bool,
+    show_docstrings: bool,
+    show_dependencies: bool,
+    show_dependency_trees: bool,
 ):
     lines = [format_fixture(fixture, show_scope=show_scopes)]
 
@@ -728,12 +749,12 @@ def yield_fixture_usages_by_tests(used_by: Iterable[Test]) -> Iterator[str]:
 
 
 def yield_fixture_dependency_tree(
-        fixture: Fixture,
-        fixtures_to_parents_or_children: _TYPE_FIXTURE_TO_FIXTURES,
-        show_scopes: bool,
-        max_depth: Optional[int],
-        depth: int = 0,
-        prefix=INDENT,
+    fixture: Fixture,
+    fixtures_to_parents_or_children: _TYPE_FIXTURE_TO_FIXTURES,
+    show_scopes: bool,
+    max_depth: Optional[int],
+    depth: int = 0,
+    prefix=INDENT,
 ) -> Iterator[str]:
     if max_depth is not None and depth >= max_depth:
         return
@@ -793,7 +814,7 @@ def get_exit_code(results: Iterable[TestResult]) -> ExitCode:
         return ExitCode.NO_TESTS_FOUND
 
     if any(
-            r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in results
+        r.outcome == TestOutcome.FAIL or r.outcome == TestOutcome.XPASS for r in results
     ):
         exit_code = ExitCode.FAILED
     else:
